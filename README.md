@@ -1,41 +1,24 @@
-# 🎨 Expense Tracker — Frontend
+# 🎨 Expense Tracker - Frontend (React)
 
-This is the **frontend** (React + TypeScript) client for the **Expense Tracker** app. It allows employees to submit expenses, view their list, and for admins to approve or reject those expenses. Uses a backend REST API.
+React + TypeScript frontend for the Expense Tracker app.
 
----
+## 🔗 Live URL
+http://expense-tracker-frontend-demo.s3-website.ap-south-1.amazonaws.com
 
-## 🚀 Live URL
+## 🧩 Features
+- Login with name + password
+- Role-based UI (employee / admin)
+- Submit & view expenses
+- Admin approve/reject
+- Analytics with chart by category
 
-📍Frontend: [https://your-s3-url.amazonaws.com](https://your-s3-url.amazonaws.com)  
-➡️ Connects to backend API hosted on Elastic Beanstalk
+## 📦 Tech Stack
+- React + TypeScript
+- Redux Toolkit + Redux Persist
+- Axios
+- Material UI (MUI v5)
+- Deployed via AWS S3 (static hosting)
 
----
-
-## 🛠 Stack
-
-- **React + TypeScript**
-- **Redux Toolkit** for state management
-- **Axios** for HTTP calls
-- **Material-UI (v5)** for elegant design
-- **Redux-Persist** to keep user logged in
-- **Deployed on AWS S3**
-
----
-
-## 📦 Features
-
-- 🔐 Login with username & password
-- 👤 Role-based UI (Employee / Admin)
-- ➕ Submit new expense form
-- 📄 View submitted expenses
-- ✅ Admin can approve/reject pending expenses
-- 📊 Chart-based analytics (Pie chart by category)
-- 🎨 Elegant responsive Material UI styling
-
----
-
-## ⚙️ Development
-
-```bash
-npm install
+## ⚙️ Setup
+npm install --legacy-peer-deps
 npm start
