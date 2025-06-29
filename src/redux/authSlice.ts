@@ -1,8 +1,9 @@
+// src/redux/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import api from '../services/api';
 
 export interface User {
-  userId: string; // acts as token
+  userId: string; // Simulate Token
   name: string;
   role: 'admin' | 'employee';
 }
@@ -17,13 +18,14 @@ const initialState: AuthState = {
   error: null,
 };
 
-export const loginUser = createAsyncThunk(
+// ✅ FIXED: Set return type explicitly to User
+export const loginUser = createAsyncThunk<User, { name: string; password: string }>(
   'auth/loginUser',
-  async (payload: { name: string; password: string }, thunkAPI) => {
+  async (payload, thunkAPI) => {
     try {
       const response = await api.post('/auth/login', payload);
-      return response.data;
-    } catch (error: any) {
+      return response.data; // Must be of type User
+    } catch (error) {
       return thunkAPI.rejectWithValue('Login failed');
     }
   }
@@ -35,7 +37,9 @@ const authSlice = createSlice({
   reducers: {
     logout(state) {
       state.user = null;
-    },
+      state.error = null;
+      localStorage.clear();
+    }
   },
   extraReducers(builder) {
     builder

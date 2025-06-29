@@ -1,8 +1,7 @@
 import axios from 'axios';
-import store from '../redux/store';
 
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+    baseURL: 'http://exp-track-api.ap-south-1.elasticbeanstalk.com/api',
 });
 
 export default api;

@@ -1,125 +1,125 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Container,
-  Typography,
-  TextField,
-  MenuItem,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
-  Button,
+    Container,
+    Typography,
+    Grid,
+    Card,
+    CardContent,
+    CardActions,
+    Button,
+    Chip
 } from '@mui/material';
 import api from '../services/api';
 import { useAppSelector } from '../redux/hooks';
 
-const categories = ['All', 'Travel', 'Meals', 'Office Supplies', 'Software'];
-
 const ExpensesPage = () => {
-  const { user } = useAppSelector((state) => state.auth);
-  const [expenses, setExpenses] = useState<any[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedDate, setSelectedDate] = useState('');
+    const { user } = useAppSelector((state) => state.auth);
+    const [expenses, setExpenses] = useState<any[]>([]);
 
-  useEffect(() => {
-    const fetchExpenses = async () => {
-      if (!user) return;
+    useEffect(() => {
+        const fetchExpenses = async () => {
+            if (!user) return;
 
-      const res = await api.get('/expenses', {
-        params: {
-          role: user.role,
-          userId: user.userId,
+            try {
+                const res = await api.get('/expenses', {
+                    params: {
+                        role: user.role,
+                        userId: user.userId
+                    }
+                });
+                setExpenses(res.data);
+            } catch (err) {
+                console.error('Failed to fetch expenses', err);
+            }
+        };
+
+        fetchExpenses();
+    }, [user]);
+
+    const isAdmin = user?.role === 'admin';
+
+    const handleStatusChange = async (id: string, status: 'approved' | 'rejected') => {
+        try {
+            await api.patch(`/expenses/${id}`, { status });
+
+            // Refresh the list after updating
+            setExpenses((prev) =>
+                prev.map((expense) =>
+                    expense._id === id ? { ...expense, status } : expense
+                )
+            );
+        } catch (err) {
+            console.error('Failed to update status', err);
         }
-      });
-
-      setExpenses(res.data);
     };
 
-    fetchExpenses();
-  }, [user, selectedCategory, selectedDate]);
+    return (
+        <Container>
+            <Typography variant="h4" mt={4} mb={2}>
+                {isAdmin ? 'Team Expenses' : 'My Expenses'}
+            </Typography>
 
-  const isAdmin = user?.role === 'admin';
+            <Grid container spacing={2}>
+                {expenses.length === 0 ? (
+                    <Typography>No expenses found.</Typography>
+                ) : (
+                    expenses.map((expense) => (
+                        <Grid item xs={12} sm={6} md={4} key={expense._id}>
+                            <Card>
+                                <CardContent>
+                                    <Typography variant="h6">{expense.category}</Typography>
+                                    <Typography>Amount: ${expense.amount}</Typography>
+                                    <Typography>Description: {expense.description}</Typography>
+                                    <Typography>Date: {expense.date}</Typography>
+                                </CardContent>
+                                <CardActions>
+                                    {/* Show status CHIPS to everyone */}
+                                    <Chip
+                                        label={
+                                            expense.status === 'approved'
+                                                ? 'Approved'
+                                                : expense.status === 'rejected'
+                                                    ? 'Rejected'
+                                                    : 'In Review' // for pending or missing
+                                        }
+                                        color={
+                                            expense.status === 'approved'
+                                                ? 'success'
+                                                : expense.status === 'rejected'
+                                                    ? 'error'
+                                                    : 'warning'
+                                        }
+                                        variant="outlined"
+                                        sx={{ mr: 2 }}
+                                    />
 
-  const filteredExpenses = expenses.filter((expense) => {
-    const categoryMatch = selectedCategory === 'All' || expense.category === selectedCategory;
-    const dateMatch = !selectedDate || expense.date === selectedDate;
-    const roleMatch = isAdmin || expense.userId === user?.userId;
-
-    return categoryMatch && dateMatch && roleMatch;
-  });
-
-  const handleStatusChange = async (expenseId: string, status: 'approved' | 'rejected') => {
-    await api.patch(`/expenses/${expenseId}`, { status });
-    alert(`Expense ${status}`);
-  };
-
-  return (
-    <Container>
-      <Typography variant="h4" mt={4} mb={2}>
-        {isAdmin ? 'Team Expenses' : 'My Expenses'}
-      </Typography>
-
-      <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            label="Filter by Category"
-            fullWidth
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-          >
-            {categories.map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Grid>
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Filter by Date"
-            type="date"
-            fullWidth
-            InputLabelProps={{ shrink: true }}
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-        </Grid>
-      </Grid>
-
-      <Grid container spacing={2}>
-        {filteredExpenses.length === 0 ? (
-          <Typography variant="body2" mt={2}>
-            No expenses found for selected filters.
-          </Typography>
-        ) : (
-          filteredExpenses.map((expense) => (
-            <Grid item xs={12} sm={6} md={4} key={expense._id}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6">{expense.category}</Typography>
-                  <Typography>Amount: ${expense.amount}</Typography>
-                  <Typography>Description: {expense.description}</Typography>
-                  <Typography>Date: {expense.date}</Typography>
-                  <Typography>Status: {expense.status}</Typography>
-                </CardContent>
-                {isAdmin && (
-                  <CardActions>
-                    <Button color="success" size="small" onClick={() => handleStatusChange(expense._id, 'approved')}>
-                      Approve
-                    </Button>
-                    <Button color="error" size="small" onClick={() => handleStatusChange(expense._id, 'rejected')}>
-                      Reject
-                    </Button>
-                  </CardActions>
+                                    {/* Show action buttons to ADMIN only if pending */}
+                                    {isAdmin && (expense.status === 'pending' || !expense.status) && (
+                                        <>
+                                            <Button
+                                                size="small"
+                                                color="success"
+                                                onClick={() => handleStatusChange(expense._id, 'approved')}
+                                            >
+                                                Approve
+                                            </Button>
+                                            <Button
+                                                size="small"
+                                                color="error"
+                                                onClick={() => handleStatusChange(expense._id, 'rejected')}
+                                            >
+                                                Reject
+                                            </Button>
+                                        </>
+                                    )}
+                                </CardActions>
+                            </Card>
+                        </Grid>
+                    ))
                 )}
-              </Card>
             </Grid>
-          ))
-        )}
-      </Grid>
-    </Container>
-  );
+        </Container>
+    );
 };
 
 export default ExpensesPage;
